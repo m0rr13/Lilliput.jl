@@ -1,4 +1,6 @@
 using Documenter
 using Lilliput
 
-makedocs(sitename="Lilliput.jl documentation", remotes=nothing)
+makedocs(;
+    sitename="Lilliput.jl documentation", modules=[Lilliput], remotes=nothing, doctest=true
+)
