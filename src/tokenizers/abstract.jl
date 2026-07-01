@@ -49,6 +49,8 @@ end
 
         special_tokens::Vector{I}
     end
+
+See also [`BasicTokenizer`](@ref).
 """
 struct Tokenizer{I<:Integer} <: AbstractTokenizer
     # flattened vocabulary, where each token is the following bytes sequence:
@@ -92,16 +94,26 @@ data(t::Tokenizer) = t.vocabulary_data
 
 """
     offsets(t::Tokenizer) = t.vocabulary_offsets
+
+Return a vector whose i-th index indicates where the i-th token is encoded,
+within `data(t)`.
+
+See also [`data(t::Tokenizer)`](@ref).
 """
 offsets(t::Tokenizer) = t.vocabulary_offsets
 
 """
     bytelengths(t::Tokenizer) = t.vocabulary_bytelengths
+
+Return a vector whose i-th index indicates how many bytes is long the i-th 
+token encoded.
 """
 bytelengths(t::Tokenizer) = t.vocabulary_bytelengths
 
 """
     merges(t::Tokenizer) = t.merges
+
+Return the dictionary containing all the pair countings for BPE.
 """
 merges(t::Tokenizer) = t.merges_data
 
@@ -111,6 +123,11 @@ merges(t::Tokenizer) = t.merges_data
 special_tokens(t::Tokenizer) = t.special_tokens
 
 """
+    function vocabulary_lastindex(t::Tokenizer)
+
+Return how many bytes are encoded within `data(t)`.
+
+See also [`data(t::Tokenizer)`](@ref).
 """
 function vocabulary_lastindex(t::Tokenizer)
     # or length(t.vocabulary_bytelengths)
@@ -128,6 +145,14 @@ function token(t::Tokenizer{I}, i::I) where {I}
 end
 
 """
+    function add_token!(t::Tokenizer, bytes::Vector{UInt8})
+
+Add a new token to the tokenizer, by appending the bytes to the raw `data`
+collection, and incrementing by one the size of the `byteslengths` and `offsets`
+collections.
+
+See also [`data(t::Tokenizer)`](@ref), [`bytelengths(t::Tokenizer)`](@ref),
+[`offsets(t::Tokenizer)`](@ref).
 """
 function add_token!(t::Tokenizer, bytes::Vector{UInt8})
     vocabulary_data = data(t)
@@ -140,9 +165,15 @@ function add_token!(t::Tokenizer, bytes::Vector{UInt8})
 end
 
 """
+    struct BasicTokenizer{I<:Integer} <: AbstractTokenizer
+        tokenizer::Tokenizer{I}
+    end
 
+Very simple implementation of an [`AbstractTokenizer`](@ref).
+
+TODO: remove this and keep the `Tokenizer` only.
 """
-struct BasicTokenizer{I<:Integer}
+struct BasicTokenizer{I<:Integer} <: AbstractTokenizer
     tokenizer::Tokenizer{I}
 
     function BasicTokenizer(args...; kwargs...)
@@ -163,6 +194,13 @@ tokenizer(bt::BasicTokenizer) = bt.tokenizer
     function train(
         bt::BasicTokenizer{I}, vocabulary_size::Int, documents::Vector{String}
     ) where {I<:Integer}
+
+Learn/train/build a vocabulary from the given documents, leveraging a BPE
+implementation similar to the one of GPT-2.
+
+See also:
+- [the gpt-2 repository](https://github.com/openai/gpt-2/blob/master/src/encoder.py);
+- [the Karphaty repository](https://github.com/karpathy/minbpe/blob/master/minbpe/basic.py).
 
 # Examples
 ```jldoctest
@@ -221,14 +259,6 @@ function train(
                 token(_tokenizer, most_freqpair[2]),
             ),
         )
-
-        # println(
-        #     "merge $i/$num_merges: $most_freqpair -> $new_id (",
-        #     token(_tokenizer, new_id),
-        #     ") had ",
-        #     counts[most_freqpair],
-        #     " occurrences",
-        # )
     end
 
     return bt
