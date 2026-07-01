@@ -1,0 +1,7 @@
+name = "Lilliput"
+uuid = "c12bff77-0e45-477f-bfe4-45d7ede7f2e8"
+version = "0.1.0"
+authors = ["mauro-milella"]
+
+[workspace]
+projects = ["test"]
