@@ -7,8 +7,8 @@ include("abstract.jl")
 export AbstractTokenizer
 export train, encode, decode
 export Tokenizer
-export data, offset, lengths, merges, special_tokens
-
-
+export data, offsets, bytelengths, merges, special_tokens
+export vocabulary_lastindex, token, add_token!
+export BasicTokenizer
 
 end
