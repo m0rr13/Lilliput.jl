@@ -35,4 +35,48 @@ function count_consecutives(
     return counts
 end
 
-# function merge(indexes::) end
+"""
+    function merge(
+        indexes::AbstractVector{I}, pair::Tuple{I,I}, new_index::I
+    ) where {I<:Integer}
+
+Replace all the occurences of `pair` in `indexes` with `index`.
+
+```jldoctest
+julia> using Lilliput
+
+julia> merge([2, 3, 1, 2, 3], (2, 3), 4)
+3-element Vector{Int64}:
+ 4
+ 1
+ 4
+"""
+function merge(
+    indexes::AbstractVector{I}, pair::Tuple{I,I}, new_index::I
+) where {I<:Integer}
+    indexes_length = length(indexes)
+    p0, p1 = pair
+
+    new_indexes = zeros(I, indexes_length)
+
+    i = 1 # main iterator on indexes; jumps when a pair matches
+    j = 1 # keeps track of the last available index in new_indexes
+
+    while i <= indexes_length-1
+        if indexes[i] == p0 && indexes[i + 1] == p1
+            new_indexes[j] = new_index
+            i += 2
+        else
+            new_indexes[j] = indexes[i]
+            i += 1
+        end
+        j += 1
+    end
+
+    if i == indexes_length-1
+        new_indexes[j] = indexes[i]
+        j += 1
+    end
+
+    return new_indexes[1:(j - 1)]
+end

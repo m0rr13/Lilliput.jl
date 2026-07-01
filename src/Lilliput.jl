@@ -2,6 +2,6 @@ module Lilliput
 
 include("tokenizers/tokenizers.jl")
 using .Tokenizers
-export count_consecutives
+export count_consecutives, merge
 
 end
