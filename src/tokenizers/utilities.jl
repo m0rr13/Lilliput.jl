@@ -73,7 +73,7 @@ function merge(
         j += 1
     end
 
-    if i == indexes_length-1
+    if i <= indexes_length
         new_indexes[j] = indexes[i]
         j += 1
     end

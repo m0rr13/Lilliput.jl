@@ -10,6 +10,7 @@
     end
 
 Minimal implementation of [`AbstractTokenizer`](@ref)'s interface.
+Leverages the byte-pair encoding implementation of GPT-2.
 """
 struct BPETokenizer{I<:Integer} <: AbstractTokenizer
     # flattened vocabulary, where each token is the following bytes sequence:
@@ -124,10 +125,15 @@ function train(
     return bpetok
 end
 
+
 function encode()
 end
 
 """
+    function decode(bpetok::BPETokenizer{I}, indexes::Vector{I}) where {I}
+
+Decode a list of token IDS.
+
 # Examples
 ```jldoctest
 julia> using Lilliput
