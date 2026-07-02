@@ -17,7 +17,7 @@ Must implement the following:
 
 Offers the following minimal utilities:
 
-- vocabulary_lastindex(::AbstractTokenizer)
+- vocabulary_size(::AbstractTokenizer)
 - token(::AbstractTokenizer, i::I) where {I<:Integer}
 - add_token!(::AbstractTokenizer, bytes::Vector{UInt8})
 """
@@ -120,13 +120,13 @@ function special_tokens(t::AbstractTokenizer)
 end
 
 """
-    function vocabulary_lastindex(t::AbstractTokenizer)
+    function vocabulary_size(t::AbstractTokenizer)
 
 Return how many bytes are encoded within `data(t)`.
 
 See also [`data(t::AbstractTokenizer)`](@ref).
 """
-function vocabulary_lastindex(t::AbstractTokenizer)
+function vocabulary_size(t::AbstractTokenizer)
     return length(offsets(t))
 end
 

@@ -4,7 +4,7 @@
         vocabulary_offsets::Vector{Int}
         vocabulary_bytelengths::Vector{Int}
 
-        merges::Dict{Tuple{I,I}, I}
+        merges_data::Dict{Tuple{I,I}, I}
 
         special_tokens::Vector{I}
     end
@@ -55,7 +55,9 @@ special_tokens(bpet::BPETokenizer) = bpet.special_tokens
 
 """
     function train(
-        bpetok::BPETokenizer{I}, vocabulary_size::Int, documents::Vector{String}
+        bpetok::BPETokenizer{I}, 
+        new_vocabulary_size::Int, 
+        documents::Vector{String}
     ) where {I<:Integer}
 
 Learn/train/build a vocabulary from the given documents, leveraging a BPE
@@ -80,14 +82,22 @@ julia> Char.(token(bpetok, UInt16(256)))
 ```
 """
 function train(
-    bpetok::BPETokenizer{I}, vocabulary_size::Int, documents::Vector{String}
+    bpetok::BPETokenizer{I}, new_vocabulary_size::Int, documents::Vector{String}
 ) where {I<:Integer}
-    vocabulary_data = data(bpetok)
-    vocabulary_data_length = length(vocabulary_data)
-    @assert vocabulary_size >= vocabulary_data_length "No space available"
+    vocabulary_data_length = vocabulary_size(bpetok)
+
+    if new_vocabulary_size <= vocabulary_data_length
+        throw(
+            AssertionError(
+                "The current vocabulary size is $vocabulary_data_length, " *
+                "while you provided $new_vocabulary_size. " *
+                "Is the tokenizer already trained?",
+            ),
+        )
+    end
 
     merges_data = merges(bpetok)
-    num_merges = vocabulary_size - vocabulary_data_length
+    num_merges = new_vocabulary_size - vocabulary_data_length
 
     # these are token IDs; now, they seem just bytes, byt are combined later 
     # in heavier integers. You want UInt16 here, probably UInt32.
@@ -106,7 +116,7 @@ function train(
         most_freqpair = findmax(counts)[2] # 2 returns a Tuple{I, I}
 
         # token ID for the new token
-        new_id = I(vocabulary_lastindex(bpetok) + 1)
+        new_id = I(vocabulary_size(bpetok) + 1)
 
         # replace all the occurrences of the most frequent pair with the new ID
         indexes = merge(indexes, most_freqpair, new_id)
@@ -116,15 +126,13 @@ function train(
         add_token!(
             bpetok,
             vcat(
-                token(bpetok, most_freqpair[1]),
-                token(bpetok, most_freqpair[2]),
+                token(bpetok, most_freqpair[1]), token(bpetok, most_freqpair[2])
             ),
         )
     end
 
     return bpetok
 end
-
 
 """
     function encode(bpetok::BPETokenizer{I}, document::String) where {I}
@@ -151,7 +159,7 @@ julia> decode(bpetok, encoding)
 function encode(bpetok::BPETokenizer{I}, document::String) where {I}
     indexes = I.(codeunits(document))
     merges_data = merges(bpetok)
-    
+
     while length(indexes) >= 2
         # find the pair with the lowest count
         counts = count_consecutives(indexes)
@@ -196,4 +204,3 @@ function decode(bpetok::BPETokenizer{I}, indexes::Vector{I}) where {I<:Integer}
     end
     return String(bytes)
 end
-
