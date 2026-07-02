@@ -96,7 +96,7 @@ function train(
         append!(indexes, I.(codeunits(doc)))
     end
 
-    for i in 1:num_merges
+    for _ in 1:num_merges
         counts = count_consecutives(indexes)
 
         # trying to call "findmax" later triggers an ArgumentError; just leave
@@ -126,7 +126,31 @@ function train(
 end
 
 
-function encode()
+"""
+    
+"""
+function encode(bpetok::BPETokenizer{I}, document::String) where {I}
+    indexes = I.(codeunits(document))
+    merges_data = merges(bpetok)
+    
+    while length(indexes) >= 2
+        # find the pair with the lowest count
+        counts = count_consecutives(indexes)
+
+        pair = argmin(p -> get(merges_data, p, Inf), keys(counts))
+
+        # edge case: there is only one candidate pair for merging, probably
+        # with an Inf weight (see argmin above), but the pair does not exist
+        if !haskey(merges_data, pair)
+            break
+        end
+
+        # shrink the token IDs
+        new_index = merges_data[pair]
+        indexes = merge(indexes, pair, new_index)
+    end
+
+    return indexes
 end
 
 """
@@ -146,7 +170,7 @@ julia> decode(bpetok, UInt16[259, 32, 256])
 "Hello ll"
 ```
 """
-function decode(bpetok::BPETokenizer{I}, indexes::Vector{I}) where {I}
+function decode(bpetok::BPETokenizer{I}, indexes::Vector{I}) where {I<:Integer}
     bytes = UInt8[]
     for index in indexes
         append!(bytes, token(bpetok, index))
