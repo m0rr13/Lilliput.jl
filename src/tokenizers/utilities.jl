@@ -87,7 +87,8 @@ function _replace_control_characters(s::AbstractString)
     # especially Cc ("control characters") are subtle when writing them
     other_categories = ["Cc", "Cf", "Cs", "Co", "Cn"]
 
-    chars = Char[]
+    # stores both chars and strings (for unicodes)
+    chars = []
 
     for c in s
         if !(Base.Unicode.category_abbrev(c) in other_categories)
@@ -98,7 +99,7 @@ function _replace_control_characters(s::AbstractString)
         end
     end
 
-    return chars
+    return join(chars)
 end
 
 """
@@ -108,7 +109,7 @@ Pretty print the bytes in render.
 Bytes are converted in na string, where Unicode sequences that are dangerous
 to print (e.g., '\n') are escaped.
 """
-function render(_tokens::Vector{UInt8})
+function render(_tokens::AbstractVector{UInt8})
     # see https://github.com/JuliaLang/julia/blob/master/base/strings/unicode.jl
     s = Base.Unicode.normalize(String(_tokens), :NFKD)
     return _replace_control_characters(s)

@@ -26,7 +26,6 @@ Offers the following minimal utilities:
 """
 abstract type AbstractTokenizer end
 
-
 """
     function train(
         abstract_tokenizer::AbstractTokenizer,
@@ -154,19 +153,6 @@ function token(t::AbstractTokenizer, i::I) where {I<:Integer}
 end
 
 """
-    function render(_token::Vector{UInt8})
-
-Pretty print the bytes in render.
-This is a naive and unsafe implementation, substituting newlines with a string
-`<|newline|>` and tabs with `<|tab|>`.
-
-We should wrap every dangerous symbol in a safe control sequence.
-"""
-function render(_tokens::Vector{UInt8})
-    replace(String(_tokens), "\n" => "<|newline|>", "\t" => "<|tab|>")
-end
-
-"""
     function add_token!(t::AbstractTokenizer, bytes::Vector{UInt8})
 
 Add a new token to the tokenizer, by appending the bytes to the raw `data`
@@ -216,7 +202,9 @@ julia> bpetok = BPETokenizer();
 julia> train(bpetok, 270, ["Hello, world!", "Hello hello!"]);
 ```
 """
-function save(t::AbstractTokenizer, fileprefix::String; version::String="minbpe v1")
+function save(
+    t::AbstractTokenizer, fileprefix::String; version::String="minbpe v1"
+)
     I = precision(t)
 
     # write the model: to be used in load() later
@@ -237,26 +225,26 @@ function save(t::AbstractTokenizer, fileprefix::String; version::String="minbpe 
 
         # print the number of special tokens (and themselves) if any 
         _special_tokens = nothing
-        try 
+        try
             _special_tokens = special_tokens(t)
         catch
-            _special_tokens = Dict{String, I}()
+            _special_tokens = Dict{String,I}()
         end
         write(f, "$(length(special_tokens(t)))\n")
-        for (token, index) in _special_tokens(t)
+        for (token, index) in _special_tokens
             write(f, "$token $index\n")
         end
 
         # print the trained merges        
         # remember index is just a synonym for tokenID
         for (index1, index2) in merges(t)
-            f.write(f, "$index1 $index2\n")
+            write(f, "$index1 $index2\n")
         end
     end
 
     # create the human-readable file with the vocabulary
     vocabfile = fileprefix * ".vocab"
-    inverted_merges = Dict{I, Pair{I,I}}([b => a for (a,b) in merges(t)])
+    inverted_merges = Dict{I,Tuple{I,I}}([b => a for (a, b) in merges(t)])
 
     open(vocabfile, "w") do f
         max_index = vocabulary_size(t)
@@ -264,15 +252,18 @@ function save(t::AbstractTokenizer, fileprefix::String; version::String="minbpe 
             token1 = token(t, current_index)
             token1_string = render(token1)
 
-            if token1 in inverted_merges
+            if haskey(inverted_merges, token1)
                 token2, token3 = inverted_merges[token1]
                 token2_string = render(token2)
                 token3_string = render(token3)
 
-                f.write(f, "($token2_string) ($token3_string) => " * 
-                        "$token1_string $(current_index)\n")
+                write(
+                    f,
+                    "($token2_string) ($token3_string) => " *
+                    "$token1_string $(current_index)\n",
+                )
             else
-                f.write(f, "($token1_string) $(current_index)\n")
+                write(f, "($token1_string) $(current_index)\n")
             end
         end
     end
