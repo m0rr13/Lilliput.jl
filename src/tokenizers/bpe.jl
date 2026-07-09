@@ -95,12 +95,13 @@ julia> Char.(token(bpetok, UInt16(256)))
  'l': ASCII/Unicode U+006C (category Ll: Letter, lowercase)
 ```
 
-```jldoctest
+```julia
 julia> using Lilliput
 
 julia> bpetok = BPETokenizer(); 
 
-julia> the_virdict = readlines(joinpath("data", "the_virdict.txt"));
+# read a sample file; this is fine for both copy-pasting and building docs
+julia> the_virdict = readlines(joinpath(pwd(), "data", "the_virdict.txt"));
 
 julia> train(bpetok, 1000, the_virdict);
 
