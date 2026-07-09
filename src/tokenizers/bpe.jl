@@ -94,6 +94,19 @@ julia> Char.(token(bpetok, UInt16(256)))
  'l': ASCII/Unicode U+006C (category Ll: Letter, lowercase)
  'l': ASCII/Unicode U+006C (category Ll: Letter, lowercase)
 ```
+
+```jldoctest
+julia> using Lilliput
+
+julia> bpetok = BPETokenizer(); 
+
+julia> the_virdict = readlines(joinpath("data", "the_virdict.txt"));
+
+julia> train(bpetok, 1000, the_virdict);
+
+julia> String(token(bpetok, 848))
+"after "
+```
 """
 function train(
     bpetok::BPETokenizer{I}, new_vocabulary_size::Int, documents::Vector{String}
